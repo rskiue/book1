@@ -1,0 +1,144 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{book}
+\title{book\_title}
+\author{author\_name}
+\date{2022-02-12}
+
+\usepackage{amsmath,amssymb}
+\usepackage{lmodern}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\hypersetup{
+  pdftitle={book\_title},
+  pdfauthor={author\_name},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+\urlstyle{same} % disable monospaced font for URLs
+\usepackage{longtable,booktabs,array}
+\usepackage{calc} % for calculating minipage widths
+% Correct order of tables after \paragraph or \subparagraph
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd\longtable{\par}{\if@noskipsec\mbox{}\fi\par}{}{}
+\makeatother
+% Allow footnotes in longtable head/foot
+\IfFileExists{footnotehyper.sty}{\usepackage{footnotehyper}}{\usepackage{footnote}}
+\makesavenoteenv{longtable}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{5}
+%lualatexjaを使うために,ヘッダーとして読み込ませるtexファイル
+%必要なヘッダーはここに記述しておくと楽です
+%個人的な趣味でIPAフォントを利用しています
+\usepackage{luatexja}
+\usepackage{luatexja-fontspec}
+\setmainjfont{IPAGothic}
+\setsansjfont{IPAGothic}
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+
+\begin{document}
+\maketitle
+
+{
+\setcounter{tocdepth}{1}
+\tableofcontents
+}
+\hypertarget{book_title}{%
+\chapter{book\_title}\label{book_title}}
+
+このRm。す。
+
+\hypertarget{ux66f8ux7c4dux4f5cux6210ux65b9ux6cd5}{%
+\section{書籍作成方法}\label{ux66f8ux7c4dux4f5cux6210ux65b9ux6cd5}}
+
+\hypertarget{ux5fc5ux8981ux306aux30d1ux30c3ux30b1ux30fcux30b8ux74b0ux5883ux306aux3069}{%
+\subsection{必要なパッケージ,環境など}\label{ux5fc5ux8981ux306aux30d1ux30c3ux30b1ux30fcux30b8ux74b0ux5883ux306aux3069}}
+
+Kください。
+
+\url{http://ipafont.ipa.go.jp/}
+
+また。
+
+\hypertarget{download}{%
+\subsection{Download}\label{download}}
+
+\hypertarget{ux7a2eux985e}{%
+\subsubsection{種類}\label{ux7a2eux985e}}
+
+\begin{itemize}
+\tightlist
+\item
+  gitboo
+\end{itemize}
+
+\hypertarget{ux7ae0ux306eux30bfux30a4ux30c8ux30ebux3092ux3053ux3053ux306bux5165ux529b}{%
+\chapter{章のタイトルをここに入力}\label{ux7ae0ux306eux30bfux30a4ux30c8ux30ebux3092ux3053ux3053ux306bux5165ux529b}}
+
+進捗どうですか?aa
+
+適当に編集してください。
+
+\hypertarget{ux7ae0ux306eux30bfux30a4ux30c8ux30eb2}{%
+\chapter{章のタイトル2}\label{ux7ae0ux306eux30bfux30a4ux30c8ux30eb2}}
+
+進捗どうですか?
+
+\hypertarget{ux7bc0ux898bux51faux30571}{%
+\section{節見出し1}\label{ux7bc0ux898bux51faux30571}}
+
+ほげほげ
+
+\hypertarget{ux7bc0ux898bux51faux30572}{%
+\section{節見出し2}\label{ux7bc0ux898bux51faux30572}}
+
+ふがふが
+
+\end{document}
