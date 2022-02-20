@@ -1,4 +1,112 @@
 ---
+title: "book_title"
+author: "author_name"
+date: "`r Sys.Date()`"
+site: bookdown::bookdown_site
+output: bookdown::gitbook
+documentclass: book
+# github-repo: (your-github-repository)
+description: "This is a description. Please wrote a abstract this contents. "
+---
+
+# github-repo: (your-github-repository)
+
+Placeholder
+
+
+## 書籍作成方法
+### 必要なパッケージ,環境など
+### Download
+#### 種類
+
+<!--chapter:end:index.Rmd-->
+
+# メモ
+
+-   HTML（Gitbook）形式でもPDF形式でも日本語で出力すること。（ggplotなど含む）
+
+    -   ill-identified氏のRmd-jaを使うか。KUNISATOさんらのパッケージ（心理学研究）を使うか。
+
+    -   前者はいろいろとカスタマイズがされている。ドキュメントにう記載の一式を読み込むと必要なファイルがダウンロードできる。
+
+    -   エラーメッセージの文字化けをなくしたい。
+
+-   パッケージ導入や環境構築、分析に再現性を持たせること。
+
+-   適当に編集してください。
+
+<!--chapter:end:01-title1.Rmd-->
+
+```{r setup, include=FALSE}
+require(tidyverse)
+require(knitr)
+```
+
+
+# 章のタイトル2
+
+進捗どうですか?
+
+## 節見出し1
+
+ほげほげ
+```{r}
+iris %>%
+  tibble() %>%
+  ggplot(aes(x=Sepal.Length,y=Sepal.Width))+
+  geom_point()+
+  labs(x="ほげほげ",y="ふがふが")
+```
+
+
+
+## 節見出し2
+
+ふがふが
+
+<!--chapter:end:02-title2.Rmd-->
+
+# Methods
+
+ここではメソッドを作成する。
+
+We describe our methods in this chapter.
+
+Math can be added in body using usual syntax like this 
+
+## math example
+
+$p$ is unknown but expected to be around 1/3. Standard error will be approximated
+
+$$
+SE = \sqrt(\frac{p(1-p)}{n}) \approx \sqrt{\frac{1/3 (1 - 1/3)} {300}} = 0.027
+$$
+
+You can also use math in footnotes like this^[where we mention $p = \frac{a}{b}$].
+
+We will approximate standard error to 0.027[^longnote]
+
+[^longnote]: $p$ is unknown but expected to be around 1/3. Standard error will be approximated
+
+    $$
+    SE = \sqrt(\frac{p(1-p)}{n}) \approx \sqrt{\frac{1/3 (1 - 1/3)} {300}} = 0.027
+    $$
+
+<!--chapter:end:03-method.Rmd-->
+
+
+# メモ
+
+Placeholder
+
+
+## Bookdown関連
+## Docker関連
+### 参考情報
+
+<!--chapter:end:04-literature.Rmd-->
+
+---
 editor_options: 
   markdown: 
     wrap: 72
@@ -1115,3 +1223,6 @@ is laid out in the introduction to [Clarke, Romano and Wolf
 [Athey and Wager (2019)](https://arxiv.org/abs/1902.07409) shows an
 application of causal forests to heterogeity analysis in a setting with
 clustering.
+
+<!--chapter:end:heterogeneous-treatment-effect-1.Rmd-->
+
