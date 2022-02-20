@@ -1,3 +1,9 @@
+```{r setup, include=FALSE}
+require(tidyverse)
+require(knitr)
+```
+
+
 # 章のタイトル2
 
 進捗どうですか?
@@ -5,6 +11,15 @@
 ## 節見出し1
 
 ほげほげ
+```{r}
+iris %>%
+  tibble() %>%
+  ggplot(aes(x=Sepal.Length,y=Sepal.Width))+
+  geom_point()+
+  labs(x="ほげほげ",y="ふがふが")
+```
+
+
 
 ## 節見出し2
 

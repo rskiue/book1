@@ -4,11 +4,11 @@
 
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <title>chapter: 2 メモ | book_title</title>
+  <title>chapter: 4 Methods | book_title</title>
   <meta name="description" content="This is a description. Please wrote a abstract this contents." />
   <meta name="generator" content="bookdown 0.24 and GitBook 2.6.7" />
 
-  <meta property="og:title" content="chapter: 2 メモ | book_title" />
+  <meta property="og:title" content="chapter: 4 Methods | book_title" />
   <meta property="og:type" content="book" />
   
   
@@ -16,7 +16,7 @@
   
 
   <meta name="twitter:card" content="summary" />
-  <meta name="twitter:title" content="chapter: 2 メモ | book_title" />
+  <meta name="twitter:title" content="chapter: 4 Methods | book_title" />
   
   <meta name="twitter:description" content="This is a description. Please wrote a abstract this contents." />
   
@@ -31,8 +31,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black" />
   
   
-<link rel="prev" href="index.html"/>
-<link rel="next" href="02-title2.html"/>
+<link rel="prev" href="02-title2.html"/>
+<link rel="next" href="04-literature.html"/>
 <script src="libs/header-attrs-2.11/header-attrs.js"></script>
 <script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.4.6/dist/fuse.min.js"></script>
@@ -193,27 +193,39 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
           <div class="page-inner">
 
             <section class="normal" id="section-">
-<div id="メモ" class="section level1" number="2">
-<h1><span class="header-section-number">chapter: 2</span> メモ</h1>
-<ul>
-<li><p>HTML（Gitbook）形式でもPDF形式でも日本語で出力すること。（ggplotなど含む）</p>
-<ul>
-<li><p>ill-identified氏のRmd-jaを使うか。KUNISATOさんらのパッケージ（心理学研究）を使うか。</p></li>
-<li><p>前者はいろいろとカスタマイズがされている。ドキュメントにう記載の一式を読み込むと必要なファイルがダウンロードできる。</p></li>
-<li><p>エラーメッセージの文字化けをなくしたい。</p></li>
-</ul></li>
-<li><p>パッケージ導入や環境構築、分析に再現性を持たせること。</p></li>
-<li><p>適当に編集してください。</p></li>
-</ul>
+<div id="methods" class="section level1" number="4">
+<h1><span class="header-section-number">chapter: 4</span> Methods</h1>
+<p>ここではメソッドを作成する。</p>
+<p>We describe our methods in this chapter.</p>
+<p>Math can be added in body using usual syntax like this</p>
+<div id="math-example" class="section level2" number="4.1">
+<h2><span class="header-section-number">4.1</span> math example</h2>
+<p><span class="math inline">\(p\)</span> is unknown but expected to be around 1/3. Standard error will be approximated</p>
+<p><span class="math display">\[
+SE = \sqrt(\frac{p(1-p)}{n}) \approx \sqrt{\frac{1/3 (1 - 1/3)} {300}} = 0.027
+\]</span></p>
+<p>You can also use math in footnotes like this<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>.</p>
+<p>We will approximate standard error to 0.027<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a></p>
 
+</div>
+</div>
+<div class="footnotes">
+<hr />
+<ol start="1">
+<li id="fn1"><p>where we mention <span class="math inline">\(p = \frac{a}{b}\)</span><a href="03-method.html#fnref1" class="footnote-back">↩︎</a></p></li>
+<li id="fn2"><p><span class="math inline">\(p\)</span> is unknown but expected to be around 1/3. Standard error will be approximated</p>
+<p><span class="math display">\[
+SE = \sqrt(\frac{p(1-p)}{n}) \approx \sqrt{\frac{1/3 (1 - 1/3)} {300}} = 0.027
+\]</span><a href="03-method.html#fnref2" class="footnote-back">↩︎</a></p></li>
+</ol>
 </div>
             </section>
 
           </div>
         </div>
       </div>
-<a href="index.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
-<a href="02-title2.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+<a href="02-title2.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="04-literature.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
     </div>
   </div>
 <script src="libs/gitbook-2.6.7/js/app.min.js"></script>
@@ -244,7 +256,7 @@ gitbook.start({
 "size": 2
 },
 "edit": {
-"link": "https://github.com/rstudio/bookdown-demo/edit/master/01-title1.Rmd",
+"link": "https://github.com/rstudio/bookdown-demo/edit/master/03-method.Rmd",
 "text": "Edit"
 },
 "history": {
