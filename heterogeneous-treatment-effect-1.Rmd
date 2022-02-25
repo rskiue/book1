@@ -135,7 +135,7 @@ data %>% summary()
 
 ## Pre-specified hypotheses
 
-ここではデータを見る前にグループは決まっていたと考える。単に処置とグループの交差項を入れておけば良い。
+ここではデータを見る前にグループは決まっていた(pre-specified)と考える。単に処置とグループの交差項を入れておけば良い。
 
 We will begin by learning how to test pre-specified null hypotheses of
 the form
@@ -173,12 +173,12 @@ $$
 
 処置Wとの交差項を見ることで政治志向による処置効果の違いを見ることができる。
 
-Rewriting the null hypothesis \@ref(eq:hte-hyp) in terms of the
-decomposition \@ref(eq:decomp), we see that it boils down to a test
-about the coefficient in the interaction: $\beta_{xw} = 0$. Here's an
-example that tests whether the treatment effect is the same for
-"conservative" (`polviews` \< 4) and "liberal" (`polviews` $\geq$ 4)
-individuals.
+> Rewriting the null hypothesis \@ref(eq:hte-hyp) in terms of the
+> decomposition \@ref(eq:decomp), we see that it boils down to a test
+> about the coefficient in the interaction: $\beta_{xw} = 0$. Here's an
+> example that tests whether the treatment effect is the same for
+> "conservative" (`polviews` \< 4) and "liberal" (`polviews` $\geq$ 4)
+> individuals.
 
 ```{r}
 # Only valid in randomized settings
@@ -330,27 +330,48 @@ summary_rw_lm(ols, indices=interact)
 <font size=1> Compare the adjusted p-values under Romano-Wolf with those
 obtained via Bonferroni above. </font>
 
-The Bonferroni and Romano-Wolf methods control the **familywise error
-rate (FWER)**, which is the (asymptotic) probability of rejecting even
-one true null hypothesis. In other words, for a significance level
-$\alpha$, they guarantee that with probability $1 - \alpha$ we will make
-zero false discoveries. However, when the number of hypotheses being
-tested is very large, this criterion may be so stringent that it
-prevents us from being able to detect real effects. Instead, there exist
-alternative procedures that control the (asymptotic) **false discovery
-rate (FDR)**, defined as the expected proportion of true null hypotheses
-rejected among all hypotheses rejected. One such procedure is the
-Benjamini-Hochberg procedure, which is available in base R via
-`p.adjust(..., method="BH")`. For what remains we'll stick with FWER
-control, but keep in mind that FDR control can also useful in
-exploratory analyses or settings in which there's a very large number of
-hypotheses under consideration.
+Bonferroni補正とRomano-Wolfの補正は、**familywise error rate
+(FWER)**をコントロールする。これは、真である帰無仮説を一つでも棄却してしま確率である。（メモ：真である帰無仮説を誤って棄却してしまう確率＝Type
+I
+error＝αをコントロールする）。言い換えると、有意水準αのもと、1-αの確率で全くFalseDiscoveryしないで済むことになる。しかし、仮説検定の数が増えると、この基準は強すぎて真の効果を見落としてしまいかねない。
 
-As in the previous chapter, when working with observational data under
-unconfoundedness and overlap, one can use AIPW scores
-$\widehat{\Gamma}_i$ in place of the raw outcomes $Y_i$. In the next
-snippet, we construct AIPW scores using the `causal_forest` function
-from the `grf` package.
+そこで代わりに、**false discovery rate
+(FDR)**をコントロールする補正が使われることもある。これは、棄却されたすべての帰無仮説のうちの実際には真であった帰無仮説の割合の期待値を表している。FDRはBenjamini-Hochberg
+の手法で補正でき、base R では
+`p.adjust(..., method="BH")`.コマンドで実装できる。
+
+以下ではFWERによる調整で基本的に進めるが、FDRによる調整も有用であり、特に検討中の仮説の数が非常に多い探索的な分析においては、有用であることを覚えておきたい。
+
+> The Bonferroni and Romano-Wolf methods control the **familywise error
+> rate (FWER)**, which is the (asymptotic) probability of rejecting even
+> one true null hypothesis. In other words, for a significance level
+> $\alpha$, they guarantee that with probability $1 - \alpha$ we will
+> make zero false discoveries. However, when the number of hypotheses
+> being tested is very large, this criterion may be so stringent that it
+> prevents us from being able to detect real effects. Instead, there
+> exist alternative procedures that control the (asymptotic) **false
+> discovery rate (FDR)**, defined as the expected proportion of true
+> null hypotheses rejected among all hypotheses rejected. One such
+> procedure is the Benjamini-Hochberg procedure, which is available in
+> base R via `p.adjust(..., method="BH")`. For what remains we'll stick
+> with FWER control, but keep in mind that FDR control can also useful
+> in exploratory analyses or settings in which there's a very large
+> number of hypotheses under consideration.
+
+前章と同様に、unconfoundednessとoverlapのもとで観察データを扱う場合には、AIPWスコア
+$\widehat{\Gamma}_i$ を生のアウトカム
+$Y_i$の代わりに使うこともできる。以下のコードでは、`grf` パッケージの
+`causal_forest` を使ってAIPWスコアを構築する。
+
+（メモ：観察データを使う場合、処置が観察可能なデータで説明できるのであれば、属性による処置効果の違いは交差項を入れることで対応できない。したがって、causal
+forest関数を使って、アウトカムモデルと処置の予測モデルを作ることで、AIPW＝Doubly
+Robustを作るということ。）
+
+> As in the previous chapter, when working with observational data under
+> unconfoundedness and overlap, one can use AIPW scores
+> $\widehat{\Gamma}_i$ in place of the raw outcomes $Y_i$. In the next
+> snippet, we construct AIPW scores using the `causal_forest` function
+> from the `grf` package.
 
 ```{r}
 # Valid in randomized settings and observational settings with unconfoundedness+overlap.
@@ -368,14 +389,17 @@ forest.tau <- causal_forest(XX, Y, W, W.hat=.5)
 forest.tau <- causal_forest(XX, Y, W) 
 
 # Get forest predictions. 
+# eは傾向スコアの推定値
 tau.hat <- predict(forest.tau)$predictions 
 m.hat <- forest.tau$Y.hat  # E[Y|X] estimates
-e.hat <- forest.tau$W.hat  # e(X) := E[W|X] estimates (or known quantity)
+e.hat <- forest.tau$W.hat  # e(X) := E[W|X] estimates (or known quantity)　
 tau.hat <- forest.tau$predictions  # tau(X) estimates
   
 # Predicting mu.hat(X[i], 1) and mu.hat(X[i], 0) for obs in held-out sample
 # Note: to understand this, read equations 6-8 in this vignette
 # https://grf-labs.github.io/grf/articles/muhats.html
+# muはアウトカムモデル。Y-e*tau mu(X,w)
+# Held out sampleを切り出してなくない？
 mu.hat.0 <- m.hat - e.hat * tau.hat        # E[Y|X,W=0] = E[Y|X] - e(X)*tau(X)
 mu.hat.1 <- m.hat + (1 - e.hat) * tau.hat  # E[Y|X,W=1] = E[Y|X] + (1 - e(X))*tau(X)
 
@@ -390,14 +414,20 @@ indices <- which(names(coef(ols.res)) != '(Intercept)')
 summary_rw_lm(ols, indices=indices)
 ```
 
-One can also construct AIPW scores using any other nonparametric method.
-Here's how to do it by fitting flexible generalized linear models
-`glmnet` and `splines`.
+ほかのノンパラメトリック手法でAIPWスコアを作ることもできる。ここでは、`glmnet`
+と
+`splines`関数によって柔軟な一般化線形モデルを使った場合の方法をいかに示す。
+
+> One can also construct AIPW scores using any other nonparametric
+> method. Here's how to do it by fitting flexible generalized linear
+> models `glmnet` and `splines`.
 
 ```{r}
 # Valid randomized data and observational data with unconfoundedness+overlap.
 # Note: read the comments below carefully. 
 # In randomized settings, do not estimate forest.e and e.hat; use known assignment probs.
+# forest云々は記載ミスか。
+# bs はsplineパッケージに入っているノンパラ関数
 fmla.xw <- formula(paste0("~", paste0("bs(", covariates, ", df=3, degree=3) *", treatment, collapse="+")))
 fmla.x <- formula(paste0("~", paste0("bs(", covariates, ", df=3, degree=3)", collapse="+")))
 XW <- model.matrix(fmla.xw, data)
@@ -453,28 +483,37 @@ summary_rw_lm(ols, indices=indices)
 
 ## Data-driven hypotheses
 
-Pre-specifying hypotheses prior to looking at the data is in general
-good practice to avoid "p-hacking" (e.g., slicing the data into
-different subgroups until a significant result is found). However, valid
-tests can also be attained if by **sample splitting**: we can use a
-subset of the sample to find promising subgroups, then test hypotheses
-about these subgroups in the remaining sample. This kind of sample
-splitting for hypothesis testing is called **honesty**.
+データを見る前にあらかじめ検証する仮説を決めておくことはp-cackingを避ける意味でも良いプラクティスである。ただし、有効な検定はsample
+splittingを行うことでもできる。sample splitting
+とは、よさそうなサブグループを見つけるためにデータの一部を用い、そのあと残りのサンプルを使ってこれらのサブグループに関する仮説検定を行う。このような仮説検定のためのサンプル分割は**honesty**と呼ばれる。
+
+> Pre-specifying hypotheses prior to looking at the data is in general
+> good practice to avoid "p-hacking" (e.g., slicing the data into
+> different subgroups until a significant result is found). However,
+> valid tests can also be attained if by **sample splitting**: we can
+> use a subset of the sample to find promising subgroups, then test
+> hypotheses about these subgroups in the remaining sample. This kind of
+> sample splitting for hypothesis testing is called **honesty**.
 
 ### Via causal trees
 
-**Causal trees** [(Athey and Imbens)(PNAS,
-2016)](https://www.pnas.org/content/pnas/113/27/7353.full.pdf) are an
-intuitive algorithm that is available in the randomized setting to
-discover subgroups with different treatment effects.
+Causal
+treeはランダム化を前提として処置効果が異なるサブグループを見つけることができる直感的なアルゴリズムである。
 
-At a high level, the idea is to divide the sample into three subsets
-(not necessarily of equal size). The `splitting` subset is used to fit a
-decision tree whose objective is modified to maximize heterogeneity in
-treatment effect estimates across leaves. The `estimation` subset is
-then used to produce a valid estimate of the treatment effect at each
-leaf of the fitted tree. Finally, a `test` subset can be used to
-validate the tree estimates.
+考え方としては、サンプルを`splitting`、`estimation`、`test`にの3つに分割する（必ずしも同じ数のサンプル出なくてよい）。splittingは、決定木をフィットさせるのに使い、葉ごとの処置効果の差が最大になるように推定される。estimationサンプルは、それぞれの葉の処置効果を推定するために使われる。testサンプルは、木の推定値のヴァリデーションに使われる。
+
+> **Causal trees** [(Athey and Imbens)(PNAS,
+> 2016)](https://www.pnas.org/content/pnas/113/27/7353.full.pdf) are an
+> intuitive algorithm that is available in the randomized setting to
+> discover subgroups with different treatment effects.
+>
+> At a high level, the idea is to divide the sample into three subsets
+> (not necessarily of equal size). The `splitting` subset is used to fit
+> a decision tree whose objective is modified to maximize heterogeneity
+> in treatment effect estimates across leaves. The `estimation` subset
+> is then used to produce a valid estimate of the treatment effect at
+> each leaf of the fitted tree. Finally, a `test` subset can be used to
+> validate the tree estimates.
 
 The next snippet uses `honest.causalTree` function from the
 [`causalTree`](https://github.com/susanathey/causalTree) package. For
@@ -525,12 +564,14 @@ num.leaves <- length(unique(tau.hat.est))
 leaf <- factor(tau.hat.est, levels=sort(unique(tau.hat.est)), labels = seq(num.leaves))
 ```
 
-Note: if your tree is not splitting at all, try decreasing the parameter
-`minsize` that controls the minimum size of each leaf. The next snippet
-plots the learned tree. The values in the cell are the estimated
-treatment effect and an estimate of the fraction of the population that
-falls within each leaf. Both are estimated using the `estimation`
-sample.
+注：まったく木が分割しない場合には、各葉の最小サンプル数を調整するパラメータであるminsizeを減らすと良い。以下のコードではTreeを描画する。セルの中の値は処置効果の推定値と、各葉に落ちるサンプルの割合の推定値をあらわしている。これらはestimationサンプルを使って推定されている。
+
+> Note: if your tree is not splitting at all, try decreasing the
+> parameter `minsize` that controls the minimum size of each leaf. The
+> next snippet plots the learned tree. The values in the cell are the
+> estimated treatment effect and an estimate of the fraction of the
+> population that falls within each leaf. Both are estimated using the
+> `estimation` sample.
 
 ```{r}
 rpart.plot(
@@ -638,34 +679,41 @@ estimates of the CATE \@ref(eq:cate).
 tau.hat <- predict(forest.tau)$predictions  # tau(X) estimates
 ```
 
-Having fit a non-parametric method such as a causal forest, a researcher
-may (incorrectly) start by looking at the distribution of its
-predictions of the treatment effect. One might be tempted to think: "if
-the histogram is concentrated at a point, then there is no
-heterogeneity; if the histogram is spread out, then our estimator has
-found interesting heterogeneity." However, this may be false.
+CFなどのノンパラ手法を使ったとき、その処置効果の予測値の分布を見たくなるかもしれない。もしヒストグラムが一点に集中していたら異質性がなさそうで、ヒストグラムが広がっていたら異質性がありそうだと考えるかもしれない。しかし、その考え方は間違っている。
+
+> Having fit a non-parametric method such as a causal forest, a
+> researcher may (incorrectly) start by looking at the distribution of
+> its predictions of the treatment effect. One might be tempted to
+> think: "if the histogram is concentrated at a point, then there is no
+> heterogeneity; if the histogram is spread out, then our estimator has
+> found interesting heterogeneity." However, this may be false.
 
 ```{r}
 # Do not use this for assessing heterogeneity. See text above.
 hist(tau.hat, main="CATE estimates", freq=F)
 ```
 
-If the histogram is concentrated at a point, we may simply be
-underpowered: our method was not able to detect any heterogeneity, but
-maybe it would detect it if we had more data. If the histogram is spread
-out, we may be overfitting: our model is producing very noisy estimates
-$\widehat{\tau}(x)$, but in fact the true $\tau(x)$ can be much smoother
-as a function of $x$.
+もしヒストグラムが一点に集中していれば、単純に検出力不足かもしれない。すなわち異質性を検出できなかったが、もっとデータが多ければ検出できるかもしれない。ヒストグラムが広がっているのは、オーバーフィットしている可能性がある。ノイズを含んで条件付き処置効果を推定してしまっているかもしれず、実際には条件付き処置効果はもっとxに対してなめらかな形かもしれない。
 
-The `grf` package also produces a measure of variable importance that
-indicates how often a variable was used in a tree split. Again, much
-like the histogram above, this can be a rough diagnostic, but it should
-not be interpreted as indicating that, for example, variable with low
-importance is not related to heterogeneity. The reasoning is the same as
-the one presented in the causal trees section: if two covariates are
-highly correlated, the trees might split on one covariate but not the
-other, even though both (or maybe neither) are relevant in the true
-data-generating process.
+> If the histogram is concentrated at a point, we may simply be
+> underpowered: our method was not able to detect any heterogeneity, but
+> maybe it would detect it if we had more data. If the histogram is
+> spread out, we may be overfitting: our model is producing very noisy
+> estimates $\widehat{\tau}(x)$, but in fact the true $\tau(x)$ can be
+> much smoother as a function of $x$.
+
+grfパッケージは変数重要度を出力することができる。変数重要度とは、その変数がどれくらい多く木の分割基準として使われたかを表す。ヒストグラムの例と同様に、これも荒い診断にはなるが、重要度が低い変数は異質性をもたらしていないといった簡単に結論付けをすることはできない。これには、causal
+treeの節で見てきたことと同様の説明が可能である。もし2つの変数が高い相関を持っていれば、例え2変数ともDGP的には意味を持っていたとしても（もしくは2変数とも関係なかったとしても）片方の変数だけを用いて木の分割は行われてもおかしくない。
+
+> The `grf` package also produces a measure of variable importance that
+> indicates how often a variable was used in a tree split. Again, much
+> like the histogram above, this can be a rough diagnostic, but it
+> should not be interpreted as indicating that, for example, variable
+> with low importance is not related to heterogeneity. The reasoning is
+> the same as the one presented in the causal trees section: if two
+> covariates are highly correlated, the trees might split on one
+> covariate but not the other, even though both (or maybe neither) are
+> relevant in the true data-generating process.
 
 ```{r}
 var_imp <- c(variable_importance(forest.tau))
@@ -676,40 +724,51 @@ sorted_var_imp[1:5]  # showing only first few
 
 #### Data-driven subgroups
 
-Just as with causal trees, we can use causal forests to divide our
-observations into subgroups. In place of leaves, we'll rank observation
-into (say) quintiles according to their estimated CATE prediction; see,
-e.g., [Chernozhukov, Demirer, Duflo, Fernández-Val
-(2020)](https://arxiv.org/abs/1712.04802) for similar ideas.
+Causal treeと同様に、Causal
+forestを使ってサブグループにサンプルを分けることができる。葉の代わりに、推定されたCATEをもとに、サンプルを順位付けをして、例えば５分割にすることができる。
 
-There's a subtle but important point that needs to be addressed here. As
-we have mentioned before, when predicting the conditional average
-treatment effect $\widehat{\tau}(X_i)$ for observation $i$ we should in
-general avoid using a model that was fitted using observation $i$. This
-sort of sample splitting (which we called **honesty** above) is one of
-the required ingredients to get unbiased estimates of the CATE using the
-methods described here. However, when ranking estimates of two
-observations $i$ and $j$, we need something a little stronger: we must
-ensure that the model was not fit using *either* $i$ *or* $j$'s data.
+難しいが検討すべき重要な点がある。すでに述べたように、サンプルiに対してCATEを推定するときには、サンプルiを用いてフィットされたモデルを一般に使うべきではない。このようなサンプル分割（上でhonestyと呼んだもの）は、CATEをバイアスなく推定するための一つの材料となる。しかし、もし二つの観測iとjについて順に付けをしようと思うと、より強い仮定として、モデルはiもjも使わずに推定されている必要がある。
 
-One way of overcoming this obstacle is simple. First, divide the data
-into $K$ folds (subsets). Then, cycle through the folds, fitting a CATE
-model on $K-1$ folds. Next, for each held-out fold, *separately* rank
-the unseen observations into $Q$ groups based on their prediction (i.e.,
-if $Q=5$, then we rank observations by estimated CATE into "top
-quintile", "second quintile", and so on). After concatenating the
-independent rankings together, we can study the differences in
-observations in each rank-group.
+> Just as with causal trees, we can use causal forests to divide our
+> observations into subgroups. In place of leaves, we'll rank
+> observation into (say) quintiles according to their estimated CATE
+> prediction; see, e.g., [Chernozhukov, Demirer, Duflo, Fernández-Val
+> (2020)](https://arxiv.org/abs/1712.04802) for similar ideas.
+>
+> There's a subtle but important point that needs to be addressed here.
+> As we have mentioned before, when predicting the conditional average
+> treatment effect $\widehat{\tau}(X_i)$ for observation $i$ we should
+> in general avoid using a model that was fitted using observation $i$.
+> This sort of sample splitting (which we called **honesty** above) is
+> one of the required ingredients to get unbiased estimates of the CATE
+> using the methods described here. However, when ranking estimates of
+> two observations $i$ and $j$, we need something a little stronger: we
+> must ensure that the model was not fit using *either* $i$ *or* $j$'s
+> data.
 
-[This
-gist](https://gist.github.com/halflearned/bea4e5137c0c81fd18a75f682da466c8)
-computes the above for `grf`, and it should not be hard to modify it so
-as to replace forests by any other non-parametric method. However, for
-`grf` specifically, there's a small trick that allows us to obtain a
-valid ranking: we can pass a vector of fold indices to the argument
-`clusters` and rank observations within each fold. This works because
-estimates for each fold ("cluster") trees are computed using trees that
-were not fit using observations from that fold. Here's how to do it.
+これを克服する方法は単純である。まずデータをK個のサンプル群に分ける。次に、群ごとに順番に、CATEモデルをK-1個の群にフィットさせる。その上で、残しておいた１つの群に対して、「別々に」まだ見ていないサンプルをQ個のグループに順位付けをする。（Q=5の場合、CATEに基づき1分位グループ、2分位グループなどと分ける）それらのランク付けを統合して、それぞれの観測値のCATEの違いを分析することができる。
+
+このgistはこれをgrfで計算する。forestではなく他のノンパラメソッドに変えて同じことを行うのは難しくない。ただし、grfは特に、有効なランク付けを行うためのちょっとした仕掛けがある。それは、フォールドのインデックスのベクトルをcausal_forest関数のclustersオプションに渡すことができ、それｗぞれのfoldの中での観測値のランク漬けをできることである。それぞれのfoldの木々における推定値は、そのfold以外のサンプルを使って構築された木で推定されているため、うまくいく。
+
+> One way of overcoming this obstacle is simple. First, divide the data
+> into $K$ folds (subsets). Then, cycle through the folds, fitting a
+> CATE model on $K-1$ folds. Next, for each held-out fold, *separately*
+> rank the unseen observations into $Q$ groups based on their prediction
+> (i.e., if $Q=5$, then we rank observations by estimated CATE into "top
+> quintile", "second quintile", and so on). After concatenating the
+> independent rankings together, we can study the differences in
+> observations in each rank-group.
+>
+> [This
+> gist](https://gist.github.com/halflearned/bea4e5137c0c81fd18a75f682da466c8)
+> computes the above for `grf`, and it should not be hard to modify it
+> so as to replace forests by any other non-parametric method. However,
+> for `grf` specifically, there's a small trick that allows us to obtain
+> a valid ranking: we can pass a vector of fold indices to the argument
+> `clusters` and rank observations within each fold. This works because
+> estimates for each fold ("cluster") trees are computed using trees
+> that were not fit using observations from that fold. Here's how to do
+> it.
 
 ```{r}
 # Valid randomized data and observational data with unconfoundedness+overlap.
@@ -729,6 +788,9 @@ num.rankings <- 5
 # Prepare for data.splitting
 # Assign a fold number to each observation.
 # The argument 'clusters' in the next step will mimick K-fold cross-fitting.
+# clustersにグループのインデックスを渡すことで、K-fold cross-fittingをまねることができる。
+# サンプルサイズ分のしーくんすを作って、それをfold数で割った余りを取ることで、グループ番号を振る。
+# foldsは c(1,1,1,...2,2,2....,3,3,3,...,)というベクトルになっている。
 num.folds <- 10
 folds <- sort(seq(n) %% num.folds) + 1
 
@@ -736,6 +798,7 @@ folds <- sort(seq(n) %% num.folds) + 1
 # Observational setting with unconfoundedness+overlap (unknown assignment probs):
 # forest <- causal_forest(X, Y, W, clusters = folds)
 # Randomized settings with fixed and known probabilities (here: 0.5).
+# 上で用意したfoldsをclustersに渡す。
 forest <- causal_forest(X, Y, W, W.hat=.5, clusters = folds)
 
 # Retrieve out-of-bag predictions.
@@ -743,13 +806,24 @@ forest <- causal_forest(X, Y, W, W.hat=.5, clusters = folds)
 # trees that were not trained using observations for that fold.
 tau.hat <- predict(forest)$predictions
 
+# ランク付けをする。fold順に、当該foldにおけるtau.hatを持ってきて、quantile関数で順位付けする。
+# tau.hat.quantilesは5分位の切れ目を出している。
+# これを切れ目として、cut関数で切る
+# 1つ目のfoldは、このfoldで推定されたtau.hatを5分位で切る。この5分位点をもとに、このfoldについては順位付けをするということ。
+
 # Rank observations *within each fold* into quintiles according to their CATE predictions.
 ranking <- rep(NA, n)
 for (fold in seq(num.folds)) {
-  tau.hat.quantiles <- quantile(tau.hat[folds == fold], probs = seq(0, 1, by=1/num.rankings))
-  ranking[folds == fold] <- cut(tau.hat[folds == fold], tau.hat.quantiles, include.lowest=TRUE,labels=seq(num.rankings))
+  tau.hat.quantiles <- quantile(tau.hat[folds == fold], 
+                                probs = seq(0, 1, by=1/num.rankings))
+  ranking[folds == fold] <- cut(tau.hat[folds == fold], 
+                                tau.hat.quantiles,
+                                include.lowest=TRUE,
+                                labels=seq(num.rankings))
 }
 ```
+
+以下のコードは、上で定義されたグループごとのATEを計算する。これは2つの方法でできる。まず、単純にそれぞれのグループにおけるATEの差をみる方法である。これはランダム化されている場合のみ有効な方法である。
 
 The next snippet computes the average treatment effect within each group
 defined above, i.e., $\mathop{\mathrm{E}}[Y_i(1) - Y_i(0)|G_i = g]$.
@@ -761,6 +835,7 @@ each group. This is valid only in randomized settings.
 # Valid only in randomized settings.
 # Average difference-in-means within each ranking
 
+# グループダミーと処置とグループの交差項を入れてOLSするだけ
 # Formula y ~ 0 + ranking + ranking:w
 fmla <- paste0(outcome, " ~ 0 + ranking + ranking:", treatment)
 ols.ate <- lm(fmla, data=transform(data, ranking=factor(ranking)))
@@ -772,12 +847,14 @@ colnames(ols.ate) <- c("method", "ranking", "estimate", "std.err")
 ols.ate
 ```
 
+もう一つの方法としては、AIPWをそれぞれのグループで平均をとる方法である。この方法はランダム化されたサンプルでも、観察データでも（UnconfoundednessとOverlap条件が満たされていてれば）利用可能である。さらに、AIPWベースの推定は大サンプルにおいてより狭い信頼区間を構築することができる。
+
 Another option is to average the AIPW scores within each group. This
 valid for both randomized settings and observational settings with
 unconfoundedness and overlap. Moreover, AIPW-based estimators should
 produce estimates with tighter confidence intervals in large samples.
 
-```{R}
+```{r}
 # Computing AIPW scores.
 tau.hat <- predict(forest)$predictions
 e.hat <- forest$W.hat # P[W=1|X]
@@ -816,19 +893,26 @@ ggplot(res) +
   theme(legend.position="bottom", legend.title = element_blank())
 ```
 
-When there isn't much detectable heterogeneity, the plot above can end
-up being non-monotonic. This can mean that the number of observations is
-too small for us to be able to detect subgroups with relevant
-differences in treatment effect.
+もし検出可能なだけの異質性がない場合には、上のプロットは、単調でなくなることもある。これはサンプル数が少なすぎて、処置効果の差が見られるようなサブグループを検出できなかったことを意味する。
 
-<font size=1> As an exercise, try running the previous two snippets on
-few data points (e.g., the first thousand observations only). You will
-likely see the "non-monotonicity" phenomenon just described. </font>
+演習として、上の2つのコードを少ないサンプル数で試してみよ（例えば最初の1000のサンプルのみを用いるなど）。おそらく非単調となるケースが確認できるだろう。
 
-Next, as we did for leaves in a causal tree, we can test e.g., if the
-prediction for groups 2, 3, etc. are larger than the one in the first
-group. Here's how to do it based on a difference-in-means estimator.
-Note the Romano-Wolf multiple-hypothesis testing correction.
+> When there isn't much detectable heterogeneity, the plot above can end
+> up being non-monotonic. This can mean that the number of observations
+> is too small for us to be able to detect subgroups with relevant
+> differences in treatment effect.
+>
+> <font size=1> As an exercise, try running the previous two snippets on
+> few data points (e.g., the first thousand observations only). You will
+> likely see the "non-monotonicity" phenomenon just described. </font>
+
+次に、causal
+treeでやったように、グループ２やグループ３の推定値がグループ１に比べて大きいのかといった検定を行うことができる。平均値の差の推定値に基づく検定方法をいかに示す。Romano-Wolfの複数仮説検定の補正に注意せよ。
+
+> Next, as we did for leaves in a causal tree, we can test e.g., if the
+> prediction for groups 2, 3, etc. are larger than the one in the first
+> group. Here's how to do it based on a difference-in-means estimator.
+> Note the Romano-Wolf multiple-hypothesis testing correction.
 
 ```{r}
 # Valid in randomized settings only.
@@ -842,6 +926,16 @@ rownames(res) <- paste("Rank", 2:num.rankings, "- Rank 1") # just for display
 res
 ```
 
+```{r}
+# 分析手法の確認のために追加.以下と同じことをやっている。
+data %>%
+  lm(y~w*factor(ranking),data=.) %>%
+    summary_rw_lm(indices=interact)
+#　rwはRomano Wolfの補正のp値を出すための関数
+```
+
+以下はAIPWベースの推定である。これもRomano Wolfの補正をしている。
+
 Here's how to do it for AIPW-based estimates, again with Romano-Wolf
 correction for multiple hypothesis testing.
 
@@ -854,6 +948,8 @@ res <- summary_rw_lm(ols, indices=2:num.rankings)
 rownames(res) <- paste("Rank", 2:num.rankings, "- Rank 1") # just for display
 res
 ```
+
+最後に、グループごとの共変量の平均値を比較することもできる。
 
 Finally, we can also check if different groups have different average
 covariate levels across rankings.
@@ -899,12 +995,37 @@ ggplot(df) +
 
 ```
 
+上のヒートマップを解釈する。処置効果の推定値が大きいようなサブグループをあらわしているような共変量は何か。ランキングごとに単調に増加するような共変量はあるか？
+
 <font size=1> Interpret the heatmap above. What describes the subgroups
 with strongest and weakest estimated treatment effect? Are there
 variables that seem to increase or decrease monotonically across
 rankings? </font>
 
 #### Best linear projection
+
+`grf::best_linear_projectoin`関数は、Doubly
+robustな処置効果の共変量への線形モデルでのフィットを行う。この回帰の係数は一般的なトレンドを示しているが、部分効果として解釈されるべきではない。処置効果と共変量の真の関係性が実際に線形であれば良いが、一般的にそれを仮定するべきではない。
+
+（突然だがIPW推定量をここで見てみよう）
+
+傾向スコアが高い人たちは処置を受けやすいと同時に、アウトカムも高くなりやすい。
+
+だからInverse probabilityでウェイティングしようというアイデア。
+
+$$
+Y=aX+bW+\epsilon\\
+p(W=1)=Normal(a+bX,\epsilon)\\
+ATE=\frac{W_i}{e(X_i)}+\frac{(1-W_i)}{1-e(X)}
+$$
+
+```{r}
+xx<-rnorm(1000)
+qnorm(0)
+xx+rnorm(1000)
+rbinom(1000,1,)
+yy<-2*xx+3*w+rnorm(1000)
+```
 
 This function provides a doubly robust fit to the linear model
 $\widehat{\tau}(X_i) = \beta_0 + A_i'\beta_1$, where $A_i$ can be a
@@ -917,6 +1038,7 @@ to make in general.
 ```{r}
 # Best linear projection of the conditional average treatment effect on covariates
 best_linear_projection(forest.tau, X)
+
 ```
 
 #### Assessing heterogeneity
