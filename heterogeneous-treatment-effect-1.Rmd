@@ -367,6 +367,8 @@ $Y_i$の代わりに使うこともできる。以下のコードでは、`grf` 
 forest関数を使って、アウトカムモデルと処置の予測モデルを作ることで、AIPW＝Doubly
 Robustを作るということ。）
 
+![](C:/Users/root1/AppData/Local/RStudio/tmp/paste-BF3A5D95.png)
+
 > As in the previous chapter, when working with observational data under
 > unconfoundedness and overlap, one can use AIPW scores
 > $\widehat{\Gamma}_i$ in place of the raw outcomes $Y_i$. In the next
@@ -727,7 +729,9 @@ sorted_var_imp[1:5]  # showing only first few
 Causal treeと同様に、Causal
 forestを使ってサブグループにサンプルを分けることができる。葉の代わりに、推定されたCATEをもとに、サンプルを順位付けをして、例えば５分割にすることができる。
 
-難しいが検討すべき重要な点がある。すでに述べたように、サンプルiに対してCATEを推定するときには、サンプルiを用いてフィットされたモデルを一般に使うべきではない。このようなサンプル分割（上でhonestyと呼んだもの）は、CATEをバイアスなく推定するための一つの材料となる。しかし、もし二つの観測iとjについて順に付けをしようと思うと、より強い仮定として、モデルはiもjも使わずに推定されている必要がある。
+（メモ：CATE自体は、すべてのサンプルに計算されるため、それをランク付けすることはできる。ただし、それだとあるobsをCATEのモデル推定と、CATEの推定の両方に使ってしまうこととなり良くない。なので、fold1\~4でモデル推定、fold5で推定。
+
+難しいが検討すべき重要な点がある。すでに述べたように、サンプルiに対してCATEを推定するときには、サンプルiを用いてフィットされたモデルを一般に使うべきではない。このようなサンプル分割（上でhonestyと呼んだもの）は、CATEをバイアスなく推定するための一つの材料となる。しかし、もし二つの観測iとjについて順位付けをしようと思うと、より強い仮定として、モデルはiもjも使わずに推定されている必要がある。
 
 > Just as with causal trees, we can use causal forests to divide our
 > observations into subgroups. In place of leaves, we'll rank
@@ -821,6 +825,16 @@ for (fold in seq(num.folds)) {
                                 include.lowest=TRUE,
                                 labels=seq(num.rankings))
 }
+```
+
+以下はメモ。tau.hatが各ランキングでオーバーラップする。
+
+```{r}
+tt<-tibble(ranking,tau.hat)
+tt %>%
+  group_by(ranking) %>%
+  summarize(min(tau.hat),max(tau.hat))
+
 ```
 
 以下のコードは、上で定義されたグループごとのATEを計算する。これは2つの方法でできる。まず、単純にそれぞれのグループにおけるATEの差をみる方法である。これはランダム化されている場合のみ有効な方法である。
@@ -1007,26 +1021,6 @@ rankings? </font>
 `grf::best_linear_projectoin`関数は、Doubly
 robustな処置効果の共変量への線形モデルでのフィットを行う。この回帰の係数は一般的なトレンドを示しているが、部分効果として解釈されるべきではない。処置効果と共変量の真の関係性が実際に線形であれば良いが、一般的にそれを仮定するべきではない。
 
-（突然だがIPW推定量をここで見てみよう）
-
-傾向スコアが高い人たちは処置を受けやすいと同時に、アウトカムも高くなりやすい。
-
-だからInverse probabilityでウェイティングしようというアイデア。
-
-$$
-Y=aX+bW+\epsilon\\
-p(W=1)=Normal(a+bX,\epsilon)\\
-ATE=\frac{W_i}{e(X_i)}+\frac{(1-W_i)}{1-e(X)}
-$$
-
-```{r}
-xx<-rnorm(1000)
-qnorm(0)
-xx+rnorm(1000)
-rbinom(1000,1,)
-yy<-2*xx+3*w+rnorm(1000)
-```
-
 This function provides a doubly robust fit to the linear model
 $\widehat{\tau}(X_i) = \beta_0 + A_i'\beta_1$, where $A_i$ can be a
 subset of the covariate columns. The coefficients in this regression are
@@ -1043,12 +1037,23 @@ best_linear_projection(forest.tau, X)
 
 #### Assessing heterogeneity
 
+`test_calibration`関数は、Best linear
+predictorのCATEをout-of-bag推定による推定値を返す。これを実施すると以下の線形モデルのようになる。（メモ：m(X)がおそらく
+
 The function `test_calibration` computes an estimate of the best linear
 predictor of true CATE based on out-of-bag predictions
 $\hat{\tau}^{-i}(\cdot)$. The exact implementation seeks to fit the
-following linear model: \begin{equation}
+following linear model:
+
+$$
+\begin{equation}
 Y_{i} - \hat{m}^{-i}(X_{i}) = \alpha\bar{\tau}\left(W_{i} - \hat{e}^{-i}(X_{i})\right) + \beta \left(\hat{\tau}^{-i}(X_{i}) - \bar{\tau} \right) \left(W_{i} - \hat{e}^{-i}(X_{i}) \right) + \epsilon,
 \end{equation}
+$$
+
+係数αとベータは推定値の性能を評価することとなる。αが１であれば、平均的な予測は正しいこととなる。一方で、βが１となれば、Forestによる予測は実際の異質性をとらえていることとなる。
+
+βはCATE予測が真のCATEに伴いどれだけ変わるかをあらわしている。したがって、p値は異質性があるかどうかのオムニバステストのようにもなる。この推定値が0より優位に大きければ、異質性がないという帰無仮説を棄却することができる。しかし、推定値がゼロより小さいことはあまり意味がなく、解釈できない。
 
 where $\bar{\tau} := n^{-1}\sum_{i=1}^{n} \hat{\tau}^{-i}(X_{i})$. The
 coefficients $\alpha$ and $\beta$ allow us to evaluate the performance
@@ -1072,6 +1077,12 @@ estimate of the average treatment effect? Is it capturing the underlying
 heterogeneity? </font>
 
 #### Partial dependence
+
+他の変数はすべて固定したうえで、一つの変数のみを変えた場合に、CATEの推定値がどのようになるか、という点も興味深いだろう。以下のプロットでは、他の変数をすべてメディアんに固定した上で、関心のある変数を分位点にわたって評価する。
+
+重要なのは、メディアんに固定することで、データポイントが少ないもしくは全く存在しないような領域でCATEを評価してしまうかもしれない。また、一部の変数を固定した上でその他の変数を動かすのはあまり面白くないかもしれにあ。
+
+以下では、`causal_forest`予測を再び行い、今度は分散の推定も行う。`estimate.variances=TRUE`とすることで、漸近分散を得ることができる。grfは漸近正規性を持つため、信頼区間も構築することができる。（メモ：他のXは固定した上で、ある関心のあるXに対するτの信頼区間ということか。）
 
 It may also be interesting to examine how our CATE estimates behave when
 we change a single covariate, while keeping all the other covariates at
@@ -1145,6 +1156,8 @@ ggplot(data.pred) +
   theme(plot.title = element_text(size = 11, face = "bold")) 
 ```
 
+この例では、かなり大きな信頼区間となっている点に注意せよ。これは2つの観点から説明できる。まず、上で言及したように、データが少ない問題がある。例えば、polviewsが６であるようなデータ自体は少なくないにもかかわらず（以下のコードを走らせると全サンプルの15%は６である。）、
+
 Note that, in this example, we got fairly large confidence intervals.
 This can be explained in two ways. First, as we mentioned above, there's
 a data scarcity problem. For example, even though the number of
@@ -1154,6 +1167,8 @@ observations with `polviews` equal to `6` is not small,
 with(data, mean(polviews == 6))
 ```
 
+polviewが６であり、かつ、例えば年齢がメディアンに近いような人の数は遥かに少なくなってしまうし、
+
 there's a much smaller fraction of individuals with `polviews` equal to
 `6` and (say) age close to the median age,
 
@@ -1161,22 +1176,29 @@ there's a much smaller fraction of individuals with `polviews` equal to
 mean(with(data, (polviews == 6) & (abs(age - median(age)) <= 3))) # at most 3 yrs away
 ```
 
-and an even smaller fraction of observations with `polviews` equal to
-`6` and every other variable close to the median. The second cause of
-wide confidence intervals is statistical. Since `grf` is a
-non-parametric model, we should expect fairly wide confidence intervals,
-especially in high-dimensional problems -- that is an unavoidable
-consequence of avoiding modeling assumptions.
+さらに他の変数までメディアンに近いような人はさらに少なくなってしまう。２つ目の理由は、統計的な問題である。grfはノンパラモデルのため、比較的大きな信頼区間が構築される。特に高次元の問題の場合には顕著である。モデリングの仮定を避けたために生じる問題であり（パラメトリックな仮定をおかなかったから）、これは避けられない結果である。
 
-<font size=2> As documented in the original paper on generalized random
-forests ([Athey, Tibshirani and Wager,
-2019](https://arxiv.org/abs/1610.01271)), the coverage of `grf`
-confidence intervals can drop if the signal is too dense or too complex
-relative to the number of observations. Also, to a point, it's possible
-to get tighter confidence intervals by increasing the number of trees;
-see this [short
-vignette](https://grf-labs.github.io/grf/articles/ci_and_num.trees.html)
-for more information. </font>
+> and an even smaller fraction of observations with `polviews` equal to
+> `6` and every other variable close to the median. The second cause of
+> wide confidence intervals is statistical. Since `grf` is a
+> non-parametric model, we should expect fairly wide confidence
+> intervals, especially in high-dimensional problems -- that is an
+> unavoidable consequence of avoiding modeling assumptions.
+
+GRFの元論文でも指摘されているように、grfの信頼区間のカバレッジ範囲は、サンプル数に比較してシグナルが強すぎるか複雑すぎる場合において低下する。また、木の数を増やすことによってより狭い信頼区間を構築することが可能である。詳細はshort
+vignetteを参照せよ。
+
+> <font size=2> As documented in the original paper on generalized
+> random forests ([Athey, Tibshirani and Wager,
+> 2019](https://arxiv.org/abs/1610.01271)), the coverage of `grf`
+> confidence intervals can drop if the signal is too dense or too
+> complex relative to the number of observations. Also, to a point, it's
+> possible to get tighter confidence intervals by increasing the number
+> of trees; see this [short
+> vignette](https://grf-labs.github.io/grf/articles/ci_and_num.trees.html)
+> for more information. </font>
+
+2つ以上の変数を同時に動かすことも可能である。以下のコードは、2つの変数を動かして得られた推定値と標準誤差である。
 
 We can vary more than one variable at a time. The next snippet shows
 predictions and standard errors varying two variables.
@@ -1227,6 +1249,15 @@ ggplot(df) +
     theme_minimal() +
     theme(plot.title = element_text(size = 10, face = "bold")) 
 ```
+
+### 実際の活用におけるプロセス
+
+-   ＧＲＦの活用に際して、ここではPre-specified
+    hypothesisではなく、あくまでPostでの検討を考える。
+
+-   まずはすべての変数（共変量）を使ってGRFにフィットさせる。
+
+-   変数重要度を見ること。また、処置効果別の5分位点で比較してみること。、分位別の共変量の違いを観察することを行うべきである。
 
 ## Further reading
 

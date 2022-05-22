@@ -1,0 +1,223 @@
+---
+title: "IPW"
+output: html_document
+---
+
+# IPWや操作変数について
+
+## IPW
+
+突然だがIPW推定量をここで見てみよう）
+
+傾向スコアが高い人たちは処置を受けやすいと同時に、アウトカムも高くなりやすい。
+
+だからInverse probabilityでウェイティングしようというアイデア。
+
+Y1として、処置群におけるYの数を、増やすイメージ。例えば傾向スコアが0.3であればYが3倍に増える。（疑問：それでサンプル数と同じだけの人数になるのか？　すなわち、WY/eの期待値がY（W＝１）の期待値と一致するのか）処置軍において傾向スコアの逆数の和をとると、サンプルサイズになるというのは感覚的にわかる。傾向スコアが0.5なのであれば、実際にはその人数は倍ということなので。
+
+(1/e)の処置群での和はサンプルサイズに等しくなる。
+
+処置群において、処置群の人たちをバランスさせた上で、その人Nで割るのは、Horvitz-Thompson estimatorというらしい。
+
+Hajek estimator
+
+IPWの本質は Data augmentation だと思っているのですが、「観測データの個数 nではなく、実際にどのくらい augmentation したのかに相当する項で割った方がよさそう」という気持ちを感じます。 <https://fullflu.hatenablog.com/entry/2020/05/01/ipw#Horvitz-Thompson-estimator-%E3%81%A8%E3%81%AF>
+
+$$
+Y=aX+bW+\epsilon\\
+p(W=1)=Normal(a+bX,\epsilon)\\
+ATE=\frac{1}{N}\sum_{W_i=1}\frac{Y_i}{e(X_i)}-\frac{1}{N}\sum_{W_i=0}\frac{Y_i}{1-e(X_i)}\\
+ATE=\frac{1}{\sum \frac{W_i}{e(X_i)}}\sum\frac{W_iY_i}{e(X_i)}- \frac{1}{\sum \frac{1-W_i}{1-e(X_i)}}\sum\frac{(1-W_i)Y_i}{1-e(X_i)}
+$$
+
+```{r}
+xx<-rnorm(10000)
+
+p<-pnorm(0.2+xx)
+w<-rbinom(10000,1,p)
+yy<-1+0.5*xx+0.8*w+rnorm(10000)
+dd<-tibble(xx,p,w,yy)
+
+model<-glm(w~xx,data=dd,family = binomial("logit"))
+
+dd<-dd %>%
+  mutate(e=model$fitted.values)
+```
+
+```{r}
+lm(yy~xx+w,data=dd) %>% summary()
+
+lm(yy~e+w,data=dd) %>% summary()
+
+dd %>% mutate(temp=w*yy/e-(1-w)*yy/(1-e)) %>% summarize(mean(temp))
+dd %>% mutate(temp=w*yy/e) %>% summarize(mean(temp))
+dd %>% mutate(temp=(1-w)*yy/(1-e)) %>% summarize(mean(temp))
+
+dd %>% filter(w==0) %>% mutate(temp=yy/(1-e)) %>% summarize(mean(temp))
+
+# 以下が1万にならないから、以下で割る必要がある。
+dd %>% mutate(temp=w/e) %>% summarize(sum(temp))
+dd %>% mutate(temp=(1-w)/(1-e)) %>% summarize(sum(temp))
+```
+
+## 操作変数的な変数を調整したときに起こるZバイアス
+
+ああ
+
+```{r}
+#install.packages("ggdag")
+library(ggdag)
+library(tidyverse)
+tidy_dag_2 <- ggdag::dagify(
+  Y ~ D + U,
+  D ~ Z + U,
+  exposure = "D", # 処置変数（暴露 [exposure]） を指定 
+  outcome = "Y" ,  # 結果変数を指定
+   latent = "U",    # 未観測（潜在[latent]）変数を指定
+  coords = list(x = c(Z = 0, D = 1, Y = 3, U = 2),
+                y = c(Z = 0, D = 0, Y = 0, U = 1))
+
+  ) %>% 
+  ggdag::tidy_dagitty() 
+ggdag::ggdag(tidy_dag_2) + theme_dag()
+
+
+```
+
+DGPは以下とする。
+
+```{r}
+u<-rnorm(1000)
+z<-rnorm(1000)
+d<-1+2*z+3*u+rnorm(1000)
+y<-0.5*d+0.8*u+rnorm(1000)
+dt<-tibble(u,z,d,y)
+```
+
+```{r}
+lm(y~d,data=dt) %>%summary
+lm(y~d+z,data=dt) %>%summary
+
+#install.packages("estimatr")
+library(estimatr)
+iv_robust(y ~ d | z, data = dt, 
+                     se_type = "classical") %>%summary
+
+# ZXZY
+(z%*%y)/(z%*%d)
+```
+
+## 直接効果と関節効果がある場合
+
+```{r}
+tidy_dag_2 <- ggdag::dagify(
+  Y ~ D + A + U,
+  A ~ D + B,
+  D ~ U,
+  exposure = "D", # 処置変数（暴露 [exposure]） を指定 
+  outcome = "Y" ,  # 結果変数を指定
+  coords = list(x = c(B = 0, A = 2, Y = 3, D = 1, U=2),
+                y = c(B = 1, A = 1, Y = 0.5, D = 0.5,U=0))
+
+  ) %>% 
+  ggdag::tidy_dagitty() 
+ggdag::ggdag(tidy_dag_2) + theme_dag()
+```
+
+```{r}
+u<-rnorm(1000)
+b<-rnorm(1000)
+d<-1+3*u+rnorm(1000)
+a<-2+2*d+0.5*b+rnorm(1000)
+y<-0.5*d+a+0.8*u+rnorm(1000)
+dt<-tibble(u,d,y,a,b)
+```
+
+```{r}
+lm(y~d+u,data=dt) %>%summary #正しい総合効果は2.5
+lm(y~d+a+u,data=dt) %>%summary #正しい直接効果は0.5
+
+lm(y~d+a,data=dt) %>%summary
+
+#install.packages("estimatr")
+library(estimatr)
+iv_robust(y ~ d+a | a+b, data = dt, 
+                     se_type = "classical") %>%summary
+
+```
+
+## 処置の結果変数は操作変数になりうるか？
+
+```{r}
+tidy_dag_2 <- ggdag::dagify(
+  Y ~ D + U,
+  D ~  U,
+  Z ~ D,
+  exposure = "D", # 処置変数（暴露 [exposure]） を指定 
+  outcome = "Y" ,  # 結果変数を指定
+   latent = "U",    # 未観測（潜在[latent]）変数を指定
+  coords = list(x = c(Z = 0, D = 1, Y = 3, U = 2),
+                y = c(Z = 0, D = 0, Y = 0, U = 1))
+
+  ) %>% 
+  ggdag::tidy_dagitty() 
+ggdag::ggdag(tidy_dag_2) + theme_dag()
+
+```
+
+```{r}
+u<-rnorm(1000)
+d<-1+3*u+rnorm(1000)
+z<-2*d+rnorm(1000)
+
+y<-0.5*d+0.8*u+rnorm(1000)
+dt<-tibble(u,z,d,y)
+```
+
+```{r}
+lm(y~d,data=dt) %>%summary #biased
+lm(y~d+z,data=dt) %>%summary #biased
+
+#install.packages("estimatr")
+library(estimatr)
+iv_robust(y ~ d | z, data = dt, 
+                     se_type = "classical") %>%summary
+
+```
+
+操作変数はUと独立でなければならない。そのため、上の例はダメ。下の例ならOK。下の例ではAもZも操作変数となる。（Aが観測できるならAでよいが、観測できなくてもZを使える）
+
+```{r}
+tidy_dag_2 <- ggdag::dagify(
+  Y ~ D + U,
+  D ~  U+A,
+  Z ~ A,
+  exposure = "D", # 処置変数（暴露 [exposure]） を指定 
+  outcome = "Y" ,  # 結果変数を指定
+   latent = "U",    # 未観測（潜在[latent]）変数を指定
+  coords = list(x = c(Z = 1, D = 1, Y = 3, U = 2,A=0),
+                y = c(Z = -0.5, D = 0, Y = 0, U = 1,A=0))
+
+  ) %>% 
+  ggdag::tidy_dagitty() 
+ggdag::ggdag(tidy_dag_2) + theme_dag()
+```
+
+```{r}
+u<-rnorm(1000)
+a<-rnorm(1000)
+d<-1+2*a+3*u+rnorm(1000)
+y<-0.5*d+0.8*u+rnorm(1000)
+z<-1+a+rnorm(1000)
+dt<-tibble(u,z,d,y,a)
+```
+
+```{r}
+lm(y~d,data=dt) %>%summary #biased
+lm(y~d+z,data=dt) %>%summary #biased
+
+library(estimatr)  
+#unbiased
+iv_robust(y ~ d | z, data = dt, 
+                     se_type = "classical") %>%summary
+```
