@@ -26,4 +26,8 @@ assessing-heterogeneity
 partial-dependence
 実際の活用におけるプロセス
 further-reading
+ipwや操作変数について
+ipw
 操作変数的な変数を調整したときに起こるzバイアス
+直接効果と関節効果がある場合
+処置の結果変数は操作変数になりうるか

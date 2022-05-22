@@ -24,7 +24,7 @@
 <meta name="author" content="author_name" />
 
 
-<meta name="date" content="2022-03-12" />
+<meta name="date" content="2022-05-22" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -173,7 +173,13 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li class="chapter" data-level="6.2.3" data-path="heterogeneous-treatment-effect-1.html"><a href="heterogeneous-treatment-effect-1.html#実際の活用におけるプロセス"><i class="fa fa-check"></i><b>6.2.3</b> 実際の活用におけるプロセス</a></li>
 </ul></li>
 <li class="chapter" data-level="6.3" data-path="heterogeneous-treatment-effect-1.html"><a href="heterogeneous-treatment-effect-1.html#further-reading"><i class="fa fa-check"></i><b>6.3</b> Further reading</a></li>
-<li class="chapter" data-level="6.4" data-path="IPW.html"><a href="IPW.html"><i class="fa fa-check"></i><b>6.4</b> 操作変数的な変数を調整したときに起こるZバイアス</a></li>
+</ul></li>
+<li class="chapter" data-level="7" data-path="IPW.html"><a href="IPW.html"><i class="fa fa-check"></i><b>7</b> IPWや操作変数について</a>
+<ul>
+<li class="chapter" data-level="7.1" data-path="IPW.html"><a href="IPW.html#ipw"><i class="fa fa-check"></i><b>7.1</b> IPW</a></li>
+<li class="chapter" data-level="7.2" data-path="IPW.html"><a href="IPW.html#操作変数的な変数を調整したときに起こるzバイアス"><i class="fa fa-check"></i><b>7.2</b> 操作変数的な変数を調整したときに起こるZバイアス</a></li>
+<li class="chapter" data-level="7.3" data-path="IPW.html"><a href="IPW.html#直接効果と関節効果がある場合"><i class="fa fa-check"></i><b>7.3</b> 直接効果と関節効果がある場合</a></li>
+<li class="chapter" data-level="7.4" data-path="IPW.html"><a href="IPW.html#処置の結果変数は操作変数になりうるか"><i class="fa fa-check"></i><b>7.4</b> 処置の結果変数は操作変数になりうるか？</a></li>
 </ul></li>
 <li class="divider"></li>
 <li><a href="https://github.com/rstudio/bookdown" target="blank">Published with bookdown</a></li>
@@ -1399,20 +1405,8 @@ is laid out in the introduction to <a href="http://ftp.iza.org/dp12845.pdf">Clar
 application of causal forests to heterogeity analysis in a setting with
 clustering.</p>
 
-<p>（突然だがIPW推定量をここで見てみよう）</p>
-<p>傾向スコアが高い人たちは処置を受けやすいと同時に、アウトカムも高くなりやすい。</p>
-<p>だからInverse probabilityでウェイティングしようというアイデア。</p>
-<p>Y1として、処置群におけるYの数を、増やすイメージ。例えば傾向スコアが0.3であればYが3倍に増える。（疑問：それでサンプル数と同じだけの人数になるのか？　すなわち、WY/eの期待値がY（W＝１）の期待値と一致するのか）処置軍において傾向スコアの逆数の和をとると、サンプルサイズになるというのは感覚的にわかる。傾向スコアが0.5なのであれば、実際にはその人数は倍ということなので。</p>
-<p>(1/e)の処置群での和はサンプルサイズに等しくなる。</p>
-<p>処置群において、処置群の人たちをバランスさせた上で、その人Nで割るのは、Horvitz-Thompson estimatorというらしい。</p>
-<p>Hajek estimator</p>
-<p>IPWの本質は Data augmentation だと思っているのですが、「観測データの個数 nではなく、実際にどのくらい augmentation したのかに相当する項で割った方がよさそう」という気持ちを感じます。 <a href="https://fullflu.hatenablog.com/entry/2020/05/01/ipw#Horvitz-Thompson-estimator-%E3%81%A8%E3%81%AF" class="uri">https://fullflu.hatenablog.com/entry/2020/05/01/ipw#Horvitz-Thompson-estimator-%E3%81%A8%E3%81%AF</a></p>
-<p><span class="math display">\[
-Y=aX+bW+\epsilon\\
-p(W=1)=Normal(a+bX,\epsilon)\\
-ATE=\frac{1}{N}\sum_{W_i=1}\frac{Y_i}{e(X_i)}-\frac{1}{N}\sum_{W_i=0}\frac{Y_i}{1-e(X_i)}\\
-ATE=\frac{1}{\sum \frac{W_i}{e(X_i)}}\sum\frac{W_iY_i}{e(X_i)}- \frac{1}{\sum \frac{1-W_i}{1-e(X_i)}}\sum\frac{(1-W_i)Y_i}{1-e(X_i)}
-\]</span></p>
+</div>
+</div>
             </section>
 
           </div>
