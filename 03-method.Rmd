@@ -1,10 +1,88 @@
 # Methods
 
-ここではメソッドを作成する。
+ここではGMMについて見ていく。
 
-We describe our methods in this chapter.
+```{r}
+library(tidyverse)
+library(ggdag)
+library(dagitty)
+```
 
-Math can be added in body using usual syntax like this 
+-   内生変数一つに対して操作変数が例えば3つある時に、それを全部使って効率的に推定できる。
+
+```{r}
+tidy_dag_2 <- ggdag::dagify(
+  Y ~ D + X + U,
+  D ~  U+Z1+Z2+Z3,
+  exposure = "D", # 処置変数（暴露 [exposure]） を指定 
+  outcome = "Y" ,  # 結果変数を指定
+   latent = "U",    # 未観測（潜在[latent]）変数を指定
+  coords = list(x = c(Z3 = 0,  X=2,   Z2 = 0,    D = 1, Y = 3, U = 2,Z1=0),
+                y = c(Z3 = 0.5,X=-0.5,Z2 = -0.5, D = 0, Y = 0, U = 1,Z1=0))
+
+  ) %>% 
+  ggdag::tidy_dagitty() 
+ggdag::ggdag(tidy_dag_2,stylized = TRUE) + ggdag::theme_dag_blank()
+```
+
+a
+
+```{r}
+u<-rnorm(10000)
+z1<-rnorm(10000)
+z2<-rnorm(10000)
+z3<-rnorm(10000)
+x<-1+rnorm(10000)
+d<-1+3*u+0.5*z1+0.7*z2+z3+rnorm(10000)
+
+y<-0.5*d+2*x+0.8*u+rnorm(10000)
+dt<-tibble(u,x,z1,z2,z3,d,y)
+lm(y~d,data=dt) %>%summary #biased
+lm(y~d+z1,data=dt) %>%summary #biased
+
+#install.packages("estimatr")
+library(estimatr)
+iv_robust(y ~ d | z1, data = dt, 
+                     se_type = "classical") %>%summary
+
+```
+
+2SLSで推定する場合は以下。
+
+$$ \boldsymbol{\hat{D}=Z(Z'Z)^{-1}Z'D}\\ \boldsymbol{\beta^{2SLS}=(\hat{D}'\hat{D})^{-1}\hat{D}'Y}\\ =\boldsymbol{(D'Z(Z'Z)^{-1}ZD')^{-1} D'Z(Z'Z)^{-1}Z'Y}
+$$ Zの数とDの数が同じ場合は、ZD'が正方行列となり(Z'D)\^{-1}が定義できるので
+
+$$
+=\boldsymbol{(D'Z(Z'Z)^{-1}ZD')^{-1} D'Z(Z'Z)^{-1}Z'D(Z'D)^{-1}Z'Y}\\
+=\boldsymbol{(Z'D)^{-1}Z'Y}
+$$
+
+```{r}
+lm(d~z1) %>% predict() %>% tibble(yhat=.,dt) %>%
+  lm(y~yhat,data=.)
+```
+
+操作変数法で推定する場合は以下
+
+$$
+\boldsymbol{(Z'X)^{-1}X'Y}
+$$
+
+```{r}
+
+```
+
+## GMM
+
+Z=(1,Z1,Z2,Z3)とすると、
+
+E(Z(Y-Xb))=0の4つの直行条件ができる。一方でbetaは2次元なので、すべて0となるようにはできない。
+
+それらの二乗和が最小になるようにbetaを決める。]
+
+$\frac{1}{n}\sum Z_i(Y_i-X_ib)$の二乗が小さくなるように決めるので、ZをN×４と考えて、
+
+$Z'(Y-Xb)$の各成分の二乗和が最小となるようにする。
 
 ## math example
 
@@ -14,11 +92,13 @@ $$
 SE = \sqrt(\frac{p(1-p)}{n}) \approx \sqrt{\frac{1/3 (1 - 1/3)} {300}} = 0.027
 $$
 
-You can also use math in footnotes like this^[where we mention $p = \frac{a}{b}$].
+You can also use math in footnotes like this[^method-1].
 
-We will approximate standard error to 0.027[^longnote]
+[^method-1]: where we mention $p = \frac{a}{b}$
 
-[^longnote]: $p$ is unknown but expected to be around 1/3. Standard error will be approximated
+We will approximate standard error to 0.027[^method-2]
+
+[^method-2]: $p$ is unknown but expected to be around 1/3. Standard error will be approximated
 
     $$
     SE = \sqrt(\frac{p(1-p)}{n}) \approx \sqrt{\frac{1/3 (1 - 1/3)} {300}} = 0.027
