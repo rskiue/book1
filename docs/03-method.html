@@ -24,7 +24,7 @@
 <meta name="author" content="author_name" />
 
 
-<meta name="date" content="2022-05-22" />
+<meta name="date" content="2022-05-25" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -153,7 +153,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </ul></li>
 <li class="chapter" data-level="4" data-path="03-method.html"><a href="03-method.html"><i class="fa fa-check"></i><b>4</b> Methods</a>
 <ul>
-<li class="chapter" data-level="4.1" data-path="03-method.html"><a href="03-method.html#math-example"><i class="fa fa-check"></i><b>4.1</b> math example</a></li>
+<li class="chapter" data-level="4.1" data-path="03-method.html"><a href="03-method.html#gmm"><i class="fa fa-check"></i><b>4.1</b> GMM</a></li>
 </ul></li>
 <li class="chapter" data-level="5" data-path="04-literature.html"><a href="04-literature.html"><i class="fa fa-check"></i><b>5</b> メモ</a>
 <ul>
@@ -203,29 +203,144 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
             <section class="normal" id="section-">
 <div id="methods" class="section level1" number="4">
 <h1><span class="header-section-number">chapter: 4</span> Methods</h1>
-<p>ここではメソッドを作成する。</p>
-<p>We describe our methods in this chapter.</p>
-<p>Math can be added in body using usual syntax like this</p>
-<div id="math-example" class="section level2" number="4.1">
-<h2><span class="header-section-number">4.1</span> math example</h2>
-<p><span class="math inline">\(p\)</span> is unknown but expected to be around 1/3. Standard error will be approximated</p>
+<p>ここではGMMについて見ていく。</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="03-method.html#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb2-2"><a href="03-method.html#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggdag)</span></code></pre></div>
+<pre><code>## 
+##  次のパッケージを付け加えます: &#39;ggdag&#39;</code></pre>
+<pre><code>##  以下のオブジェクトは &#39;package:stats&#39; からマスクされています: 
+## 
+##      filter</code></pre>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="03-method.html#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dagitty)</span></code></pre></div>
+<ul>
+<li>内生変数一つに対して操作変数が例えば3つある時に、それを全部使って効率的に推定できる。</li>
+</ul>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="03-method.html#cb6-1" aria-hidden="true" tabindex="-1"></a>tidy_dag_2 <span class="ot">&lt;-</span> ggdag<span class="sc">::</span><span class="fu">dagify</span>(</span>
+<span id="cb6-2"><a href="03-method.html#cb6-2" aria-hidden="true" tabindex="-1"></a>  Y <span class="sc">~</span> D <span class="sc">+</span> X <span class="sc">+</span> U,</span>
+<span id="cb6-3"><a href="03-method.html#cb6-3" aria-hidden="true" tabindex="-1"></a>  D <span class="sc">~</span>  U<span class="sc">+</span>Z1<span class="sc">+</span>Z2<span class="sc">+</span>Z3,</span>
+<span id="cb6-4"><a href="03-method.html#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">exposure =</span> <span class="st">&quot;D&quot;</span>, <span class="co"># 処置変数（暴露 [exposure]） を指定 </span></span>
+<span id="cb6-5"><a href="03-method.html#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">outcome =</span> <span class="st">&quot;Y&quot;</span> ,  <span class="co"># 結果変数を指定</span></span>
+<span id="cb6-6"><a href="03-method.html#cb6-6" aria-hidden="true" tabindex="-1"></a>   <span class="at">latent =</span> <span class="st">&quot;U&quot;</span>,    <span class="co"># 未観測（潜在[latent]）変数を指定</span></span>
+<span id="cb6-7"><a href="03-method.html#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">coords =</span> <span class="fu">list</span>(<span class="at">x =</span> <span class="fu">c</span>(<span class="at">Z3 =</span> <span class="dv">0</span>,  <span class="at">X=</span><span class="dv">2</span>,   <span class="at">Z2 =</span> <span class="dv">0</span>,    <span class="at">D =</span> <span class="dv">1</span>, <span class="at">Y =</span> <span class="dv">3</span>, <span class="at">U =</span> <span class="dv">2</span>,<span class="at">Z1=</span><span class="dv">0</span>),</span>
+<span id="cb6-8"><a href="03-method.html#cb6-8" aria-hidden="true" tabindex="-1"></a>                <span class="at">y =</span> <span class="fu">c</span>(<span class="at">Z3 =</span> <span class="fl">0.5</span>,<span class="at">X=</span><span class="sc">-</span><span class="fl">0.5</span>,<span class="at">Z2 =</span> <span class="sc">-</span><span class="fl">0.5</span>, <span class="at">D =</span> <span class="dv">0</span>, <span class="at">Y =</span> <span class="dv">0</span>, <span class="at">U =</span> <span class="dv">1</span>,<span class="at">Z1=</span><span class="dv">0</span>))</span>
+<span id="cb6-9"><a href="03-method.html#cb6-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-10"><a href="03-method.html#cb6-10" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb6-11"><a href="03-method.html#cb6-11" aria-hidden="true" tabindex="-1"></a>  ggdag<span class="sc">::</span><span class="fu">tidy_dagitty</span>() </span>
+<span id="cb6-12"><a href="03-method.html#cb6-12" aria-hidden="true" tabindex="-1"></a>ggdag<span class="sc">::</span><span class="fu">ggdag</span>(tidy_dag_2,<span class="at">stylized =</span> <span class="cn">TRUE</span>) <span class="sc">+</span> ggdag<span class="sc">::</span><span class="fu">theme_dag_blank</span>()</span></code></pre></div>
+<p><img src="book_filename_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
+<p>a</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="03-method.html#cb7-1" aria-hidden="true" tabindex="-1"></a>u<span class="ot">&lt;-</span><span class="fu">rnorm</span>(<span class="dv">10000</span>)</span>
+<span id="cb7-2"><a href="03-method.html#cb7-2" aria-hidden="true" tabindex="-1"></a>z1<span class="ot">&lt;-</span><span class="fu">rnorm</span>(<span class="dv">10000</span>)</span>
+<span id="cb7-3"><a href="03-method.html#cb7-3" aria-hidden="true" tabindex="-1"></a>z2<span class="ot">&lt;-</span><span class="fu">rnorm</span>(<span class="dv">10000</span>)</span>
+<span id="cb7-4"><a href="03-method.html#cb7-4" aria-hidden="true" tabindex="-1"></a>z3<span class="ot">&lt;-</span><span class="fu">rnorm</span>(<span class="dv">10000</span>)</span>
+<span id="cb7-5"><a href="03-method.html#cb7-5" aria-hidden="true" tabindex="-1"></a>x<span class="ot">&lt;-</span><span class="dv">1</span><span class="sc">+</span><span class="fu">rnorm</span>(<span class="dv">10000</span>)</span>
+<span id="cb7-6"><a href="03-method.html#cb7-6" aria-hidden="true" tabindex="-1"></a>d<span class="ot">&lt;-</span><span class="dv">1</span><span class="sc">+</span><span class="dv">3</span><span class="sc">*</span>u<span class="fl">+0.5</span><span class="sc">*</span>z1<span class="fl">+0.7</span><span class="sc">*</span>z2<span class="sc">+</span>z3<span class="sc">+</span><span class="fu">rnorm</span>(<span class="dv">10000</span>)</span>
+<span id="cb7-7"><a href="03-method.html#cb7-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-8"><a href="03-method.html#cb7-8" aria-hidden="true" tabindex="-1"></a>y<span class="ot">&lt;-</span><span class="fl">0.5</span><span class="sc">*</span>d<span class="sc">+</span><span class="dv">2</span><span class="sc">*</span>x<span class="fl">+0.8</span><span class="sc">*</span>u<span class="sc">+</span><span class="fu">rnorm</span>(<span class="dv">10000</span>)</span>
+<span id="cb7-9"><a href="03-method.html#cb7-9" aria-hidden="true" tabindex="-1"></a>dt<span class="ot">&lt;-</span><span class="fu">tibble</span>(u,x,z1,z2,z3,d,y)</span>
+<span id="cb7-10"><a href="03-method.html#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="fu">lm</span>(y<span class="sc">~</span>d,<span class="at">data=</span>dt) <span class="sc">%&gt;%</span>summary <span class="co">#biased</span></span></code></pre></div>
+<pre><code>## 
+## Call:
+## lm(formula = y ~ d, data = dt)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -8.9630 -1.5692  0.0072  1.5380  8.3469 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept) 1.809644   0.023413   77.29   &lt;2e-16 ***
+## d           0.705483   0.006581  107.19   &lt;2e-16 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 2.257 on 9998 degrees of freedom
+## Multiple R-squared:  0.5347, Adjusted R-squared:  0.5347 
+## F-statistic: 1.149e+04 on 1 and 9998 DF,  p-value: &lt; 2.2e-16</code></pre>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="03-method.html#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">lm</span>(y<span class="sc">~</span>d<span class="sc">+</span>z1,<span class="at">data=</span>dt) <span class="sc">%&gt;%</span>summary <span class="co">#biased</span></span></code></pre></div>
+<pre><code>## 
+## Call:
+## lm(formula = y ~ d + z1, data = dt)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -8.8231 -1.5692  0.0027  1.5286  8.4391 
+## 
+## Coefficients:
+##              Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)  1.807027   0.023410  77.191  &lt; 2e-16 ***
+## d            0.708662   0.006635 106.804  &lt; 2e-16 ***
+## z1          -0.083471   0.022943  -3.638 0.000276 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 2.255 on 9997 degrees of freedom
+## Multiple R-squared:  0.5353, Adjusted R-squared:  0.5353 
+## F-statistic:  5759 on 2 and 9997 DF,  p-value: &lt; 2.2e-16</code></pre>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="03-method.html#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co">#install.packages(&quot;estimatr&quot;)</span></span>
+<span id="cb11-2"><a href="03-method.html#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(estimatr)</span>
+<span id="cb11-3"><a href="03-method.html#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="fu">iv_robust</span>(y <span class="sc">~</span> d <span class="sc">|</span> z1, <span class="at">data =</span> dt, </span>
+<span id="cb11-4"><a href="03-method.html#cb11-4" aria-hidden="true" tabindex="-1"></a>                     <span class="at">se_type =</span> <span class="st">&quot;classical&quot;</span>) <span class="sc">%&gt;%</span>summary</span></code></pre></div>
+<pre><code>## 
+## Call:
+## iv_robust(formula = y ~ d | z1, data = dt, se_type = &quot;classical&quot;)
+## 
+## Standard error type:  classical 
+## 
+## Coefficients:
+##             Estimate Std. Error t value   Pr(&gt;|t|) CI Lower CI Upper   DF
+## (Intercept)   1.9803    0.05438   36.42 9.450e-273   1.8737   2.0869 9998
+## d             0.5254    0.05181   10.14  4.779e-24   0.4238   0.6269 9998
+## 
+## Multiple R-squared:  0.4999 ,    Adjusted R-squared:  0.4998 
+## F-statistic: 102.8 on 1 and 9998 DF,  p-value: &lt; 2.2e-16</code></pre>
+<p>2SLSで推定する場合は以下。</p>
+<p><span class="math display">\[ \boldsymbol{\hat{D}=Z(Z&#39;Z)^{-1}Z&#39;D}\\ \boldsymbol{\beta^{2SLS}=(\hat{D}&#39;\hat{D})^{-1}\hat{D}&#39;Y}\\ =\boldsymbol{(D&#39;Z(Z&#39;Z)^{-1}ZD&#39;)^{-1} D&#39;Z(Z&#39;Z)^{-1}Z&#39;Y}
+\]</span> Zの数とDの数が同じ場合は、ZD’が正方行列となり(Z’D)^{-1}が定義できるので</p>
 <p><span class="math display">\[
-SE = \sqrt(\frac{p(1-p)}{n}) \approx \sqrt{\frac{1/3 (1 - 1/3)} {300}} = 0.027
+=\boldsymbol{(D&#39;Z(Z&#39;Z)^{-1}ZD&#39;)^{-1} D&#39;Z(Z&#39;Z)^{-1}Z&#39;D(Z&#39;D)^{-1}Z&#39;Y}\\
+=\boldsymbol{(Z&#39;D)^{-1}Z&#39;Y}
 \]</span></p>
-<p>You can also use math in footnotes like this<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>.</p>
-<p>We will approximate standard error to 0.027<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a></p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="03-method.html#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">lm</span>(d<span class="sc">~</span>z1) <span class="sc">%&gt;%</span> <span class="fu">predict</span>() <span class="sc">%&gt;%</span> <span class="fu">tibble</span>(<span class="at">yhat=</span>.,dt) <span class="sc">%&gt;%</span></span>
+<span id="cb13-2"><a href="03-method.html#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">lm</span>(y<span class="sc">~</span>yhat,<span class="at">data=</span>.)</span></code></pre></div>
+<pre><code>## 
+## Call:
+## lm(formula = y ~ yhat, data = .)
+## 
+## Coefficients:
+## (Intercept)         yhat  
+##      1.9803       0.5254</code></pre>
+<p>操作変数法で推定する場合は以下。ただ内生変数の数が１つ、操作変数の数が１つの時も、<span class="math inline">\(\boldsymbol{Z=(1\;Z),D=(1\;D)}\)</span>であることに注意して、</p>
+<p><span class="math display">\[
+\boldsymbol{\beta^{IV}=(Z&#39;D)^{-1}Z&#39;Y}\\
+\begin{pmatrix}\beta_0\\\beta_1\end{pmatrix}
+=\begin{pmatrix}N&amp;\sum{D}\\\sum{Z}&amp;\sum{ZD}\end{pmatrix}^{-1}
+\begin{pmatrix}\sum{Y}\\\sum{ZY}\end{pmatrix}\\
+\beta_1=\frac{N\sum{ZY}-\sum{Z}\sum{Y}}{N\sum{ZD}-\sum{Z}\sum{D}}=\frac{Cov(Z,Y)}{Cov(Z,D)}
+\]</span></p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="03-method.html#cb15-1" aria-hidden="true" tabindex="-1"></a>z1<span class="sc">%*%</span>y<span class="sc">/</span>(z1<span class="sc">%*%</span>d)　　<span class="co">#これは正しくない。</span></span></code></pre></div>
+<pre><code>##           [,1]
+## [1,] 0.5460973</code></pre>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="03-method.html#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cov</span>(y, z1) <span class="sc">/</span> <span class="fu">cov</span>(d, z1)　<span class="co">#こっちが正しい</span></span></code></pre></div>
+<pre><code>## [1] 0.525372</code></pre>
+<div id="gmm" class="section level2" number="4.1">
+<h2><span class="header-section-number">4.1</span> GMM</h2>
+<p>例として、操作変数が３つ、内生変数が１つの場合を考える。</p>
+<p><span class="math inline">\(\boldsymbol{Z=(1\;Z_1\;Z_2\;Z_3)}\)</span>とすると、<span class="math inline">\(E\boldsymbol{(Z&#39;(Y-X\beta))=0}\)</span>の4つの直行条件ができる。</p>
+<p>一方でbetaは2次元なので、すべて0となるようにbetaを決めることはできないため、それらの二乗和が最小になるようにbetaを決める。</p>
+<p>すなわち、<span class="math inline">\(\frac{1}{n}\sum Z_i(Y_i-X_i\beta)\)</span>の二乗が小さくなるように決める。この4つの各成分の二乗和が最小となるようbetaを決める。これはZYをZXにOLSすることと同じなので、</p>
+<p><span class="math inline">\(\boldsymbol{\beta=(X&#39;ZZ&#39;X)^{-1}X’ZZ&#39;Y}\)</span>となる。</p>
+<p>ここで、なんか良い感じにスケールをそろえるためにウェイトWをかける。</p>
+<p><span class="math inline">\(\boldsymbol{\beta=(X&#39;Z\hat{W}Z&#39;X)^{-1}X’Z\hat{W}Z&#39;Y}\)</span>となる。</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="03-method.html#cb19-1" aria-hidden="true" tabindex="-1"></a>d_m<span class="ot">&lt;-</span><span class="fu">tibble</span>(<span class="fu">rep</span>(<span class="dv">1</span>,<span class="dv">10000</span>),d) <span class="sc">%&gt;%</span> <span class="fu">as.matrix</span>()</span>
+<span id="cb19-2"><a href="03-method.html#cb19-2" aria-hidden="true" tabindex="-1"></a>z_m<span class="ot">&lt;-</span><span class="fu">tibble</span>(<span class="fu">rep</span>(<span class="dv">1</span>,<span class="dv">10000</span>),z1,z2,z3)<span class="sc">%&gt;%</span> <span class="fu">as.matrix</span>()</span>
+<span id="cb19-3"><a href="03-method.html#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="fu">solve</span>(<span class="fu">t</span>(d_m)<span class="sc">%*%</span>z_m<span class="sc">%*%</span><span class="fu">t</span>(z_m)<span class="sc">%*%</span>d_m)<span class="sc">%*%</span></span>
+<span id="cb19-4"><a href="03-method.html#cb19-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">t</span>(d_m)<span class="sc">%*%</span>z_m<span class="sc">%*%</span><span class="fu">t</span>(z_m)<span class="sc">%*%</span>y</span></code></pre></div>
+<pre><code>##                    [,1]
+## rep(1, 10000) 2.0020306
+## d             0.5024534</code></pre>
 
 </div>
-</div>
-<div class="footnotes">
-<hr />
-<ol start="1">
-<li id="fn1"><p>where we mention <span class="math inline">\(p = \frac{a}{b}\)</span><a href="03-method.html#fnref1" class="footnote-back">↩︎</a></p></li>
-<li id="fn2"><p><span class="math inline">\(p\)</span> is unknown but expected to be around 1/3. Standard error will be approximated</p>
-<p><span class="math display">\[
-SE = \sqrt(\frac{p(1-p)}{n}) \approx \sqrt{\frac{1/3 (1 - 1/3)} {300}} = 0.027
-\]</span><a href="03-method.html#fnref2" class="footnote-back">↩︎</a></p></li>
-</ol>
 </div>
             </section>
 

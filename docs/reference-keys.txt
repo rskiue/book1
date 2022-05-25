@@ -10,7 +10,7 @@ download
 節見出し1
 節見出し2
 methods
-math-example
+gmm
 メモ-1
 bookdown関連
 docker関連
