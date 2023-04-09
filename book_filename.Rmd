@@ -1,3 +1,71 @@
+---
+title: "book_title"
+author: "author_name"
+date: "`r Sys.Date()`"
+site: bookdown::bookdown_site
+output: bookdown::gitbook
+documentclass: book
+# github-repo: (your-github-repository)
+description: "This is a description. Please wrote a abstract this contents. "
+---
+
+# github-repo: (your-github-repository)
+
+Placeholder
+
+
+## 書籍作成方法
+### 必要なパッケージ,環境など
+### Download
+#### 種類
+
+<!--chapter:end:index.Rmd-->
+
+# メモ
+
+-   HTML（Gitbook）形式でもPDF形式でも日本語で出力すること。（ggplotなど含む）
+
+    -   ill-identified氏のRmd-jaを使うか。KUNISATOさんらのパッケージ（心理学研究）を使うか。
+
+    -   前者はいろいろとカスタマイズがされている。ドキュメントにう記載の一式を読み込むと必要なファイルがダウンロードできる。
+
+    -   エラーメッセージの文字化けをなくしたい。
+
+-   パッケージ導入や環境構築、分析に再現性を持たせること。
+
+-   適当に編集してください。
+
+<!--chapter:end:01-title1.Rmd-->
+
+```{r setup, include=FALSE}
+require(tidyverse)
+require(knitr)
+```
+
+
+# 章のタイトル2
+
+進捗どうですか?
+
+## 節見出し1
+
+ほげほげ
+```{r}
+iris %>%
+  tibble() %>%
+  ggplot(aes(x=Sepal.Length,y=Sepal.Width))+
+  geom_point()+
+  labs(x="ほげほげ",y="ふがふが")
+```
+
+
+
+## 節見出し2
+
+ふがふが
+
+<!--chapter:end:02-title2.Rmd-->
+
 # Methods
 
 ここではGMMについて見ていく。
@@ -7,10 +75,6 @@ library(tidyverse)
 library(ggdag)
 library(dagitty)
 ```
-
-## 2SLS
-
-### Setting
 
 -   内生変数一つに対して操作変数が例えば3つある時に、それを全部使って効率的に推定できる。
 
@@ -29,9 +93,7 @@ tidy_dag_2 <- ggdag::dagify(
 ggdag::ggdag(tidy_dag_2,stylized = TRUE) + ggdag::theme_dag_blank()
 ```
 
-### DGP
-
-DGPは以下の通りとする。
+a
 
 ```{r}
 u<-rnorm(10000)
@@ -40,81 +102,32 @@ z2<-rnorm(10000)
 z3<-rnorm(10000)
 x<-1+rnorm(10000)
 d<-1+3*u+0.5*z1+0.7*z2+z3+rnorm(10000)
+
 y<-0.5*d+2*x+0.8*u+rnorm(10000)
 dt<-tibble(u,x,z1,z2,z3,d,y)
-```
-
-### パッケージを用いた推定
-
-パッケージestimatrを使った推定は以下。
-
-```{r}
-
 lm(y~d,data=dt) %>%summary #biased
 lm(y~d+z1,data=dt) %>%summary #biased
 
 #install.packages("estimatr")
 library(estimatr)
-iv_robust(y ~ d | z1+z2+z3, data = dt, 
-                     se_type = "HC2") %>%summary
+iv_robust(y ~ d | z1, data = dt, 
+                     se_type = "classical") %>%summary
 
 ```
-
-### 手計算で計算する場合
 
 2SLSで推定する場合は以下。
 
-$$ \boldsymbol{\hat{D}=Z(Z'Z)^{-1}Z'D}\\ \boldsymbol{\beta^{2SLS}=(\hat{D}'\hat{D})^{-1}\hat{D}'Y}\\ =\boldsymbol{(D'Z(Z'Z)^{-1}Z'D)^{-1} D'Z(Z'Z)^{-1}Z'Y}\\
-=\boldsymbol{\beta+(D'Z(Z'Z)^{-1}Z'D)^{-1} D'Z(Z'Z)^{-1}Z'\epsilon}
-$$
-
-```{r}
-d_m<-tibble(rep(1,10000),d) %>% as.matrix()  # n*2
-z_m<-tibble(rep(1,10000),z1,z2,z3)%>% as.matrix() # n*4
-
-zz_inv<-solve(t(z_m)%*%z_m)
-beta2sls<-solve(t(d_m)%*%z_m%*%zz_inv%*%t(z_m)%*%d_m)%*%
-  t(d_m)%*%z_m%*%zz_inv%*%t(z_m)%*%y
-beta2sls
-```
-
-この時、漸近分布は、以下のようになる。
+$$ \boldsymbol{\hat{D}=Z(Z'Z)^{-1}Z'D}\\ \boldsymbol{\beta^{2SLS}=(\hat{D}'\hat{D})^{-1}\hat{D}'Y}\\ =\boldsymbol{(D'Z(Z'Z)^{-1}ZD')^{-1} D'Z(Z'Z)^{-1}Z'Y}
+$$ Zの数とDの数が同じ場合は、ZD'が正方行列となり(Z'D)\^{-1}が定義できるので
 
 $$
-\sqrt{n}(\beta^{2sls}-\beta)\stackrel{d}{\longrightarrow }
-\boldsymbol{\{E(D'Z)E(Z'Z)^{-1}E(Z'D)\}^{-1} E(D'Z)E(Z'Z)^{-1}\\
-\mathcal{N}(0,E(ZZ'\epsilon^2)})
-$$
-
-計算してみる。期待値は標本対応に置き換える。
-
-```{r}
-dz<- t(d_m)%*%z_m/10000
-zz<- t(z_m)%*%z_m/10000
-zd<- t(z_m)%*%d_m/10000
-A<-solve(dz%*%solve(zz)%*%zd)%*%dz%*%solve(zz)
-resid<-y-d_m%*%beta2sls　#誤差項の推定値
-
-resid4<-cbind(resid,resid,resid,resid)%>% as.matrix()　#誤差項の推定値を並べる
-zze<-t(resid4*z_m)%*%(resid4*z_m)/10000　#ZZe^2の計算
-
-V<-(A%*%zze%*%t(A))[2,2]# √nβの漸近分散
-SE<-(V/10000)^(1/2) #βの漸近分散
-SE
-```
-
-Zの数とDの数が同じ場合は、ZD'が正方行列となり(Z'D)\^{-1}が定義できるので操作変数法と同じになる。
-
-$$
-=\boldsymbol{(D'Z(Z'Z)^{-1}Z'D)^{-1} D'Z(Z'Z)^{-1}Z'D(Z'D)^{-1}Z'Y}\\
+=\boldsymbol{(D'Z(Z'Z)^{-1}ZD')^{-1} D'Z(Z'Z)^{-1}Z'D(Z'D)^{-1}Z'Y}\\
 =\boldsymbol{(Z'D)^{-1}Z'Y}
 $$
 
-2SLSの手続き的には、以下のように2段階推定しても推定値は得られる。（ただし標準誤差は得られない）
-
 ```{r}
-lm(d~z1+z2+z3) %>% predict() %>% tibble(yhat=.,dt) %>%
-  lm(y~yhat,data=.) 
+lm(d~z1) %>% predict() %>% tibble(yhat=.,dt) %>%
+  lm(y~yhat,data=.)
 ```
 
 操作変数法で推定する場合は以下。ただ内生変数の数が１つ、操作変数の数が１つの時も、$\boldsymbol{Z=(1\;Z),D=(1\;D)}$であることに注意して、
@@ -191,9 +204,11 @@ solve(t(d_m)%*%z_m%*%zz_inv%*%t(z_m)%*%d_m)%*%
 
 ### 線形モデルでない場合
 
--   Vを観測データとして、$E(g(V;\theta))=E(g(\theta))=0$のモーメント条件がある時を考える。
+Vを観測データとして、$E(g(V;\theta))=E(g(\theta))=0$のモーメント条件がある時を考える。
 
--   非線形GMMは、以下のブログが参考になる。
+例として、が独立であることを想定する。
+
+非線形GMMは、以下のブログが参考になる。
 
 <https://ill-identified.hatenablog.com/entry/2015/03/08/201214>
 
@@ -245,14 +260,7 @@ u<-rnorm(10000)
 z1<-rnorm(10000)
 d<-1+0.6*u+z1+rnorm(10000)
 y<-1/(1+exp(0.5*d+1+0.7*u))+rnorm(10000,sd = 0.1)
-
-#      u
-#      ↓
-# z => d => y
        
-ZDZY
-Y=Xb+u
-
 dt<-tibble(u,d,z1,y)
 dt %>%
 ggplot()+
@@ -270,3 +278,50 @@ nls(y~1/(1+exp(b0+b1*d)),
            trace=TRUE) %>%
   summary()
 ```
+
+<!--chapter:end:03-method.Rmd-->
+
+
+# メモ
+
+Placeholder
+
+
+## Bookdown関連
+## Docker関連
+### 参考情報
+
+<!--chapter:end:04-literature.Rmd-->
+
+
+# HTE I: Binary treatment
+
+Placeholder
+
+
+## Pre-specified hypotheses
+## Data-driven hypotheses
+### Via causal trees
+### Via grf
+#### Data-driven subgroups
+#### Best linear projection
+#### Assessing heterogeneity
+#### Partial dependence
+### 実際の活用におけるプロセス
+## Further reading
+
+<!--chapter:end:heterogeneous-treatment-effect-1.Rmd-->
+
+
+# IPWや操作変数について
+
+Placeholder
+
+
+## IPW
+## 操作変数的な変数を調整したときに起こるZバイアス
+## 直接効果と関節効果がある場合
+## 処置の結果変数は操作変数になりうるか？
+
+<!--chapter:end:IPW.Rmd-->
+
