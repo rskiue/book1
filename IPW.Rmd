@@ -21,7 +21,7 @@ Y1として、処置群におけるYの数を、増やすイメージ。例え�
 
 Hajek estimator
 
-IPWの本質は Data augmentation だと思っているのですが、「観測データの個数 nではなく、実際にどのくらい augmentation したのかに相当する項で割った方がよさそう」という気持ちを感じます。 <https://fullflu.hatenablog.com/entry/2020/05/01/ipw#Horvitz-Thompson-estimator-%E3%81%A8%E3%81%AF>
+> IPWの本質は Data augmentation だと思っているのですが、「観測データの個数 nではなく、実際にどのくらい augmentation したのかに相当する項で割った方がよさそう」という気持ちを感じます。 <https://fullflu.hatenablog.com/entry/2020/05/01/ipw#Horvitz-Thompson-estimator-%E3%81%A8%E3%81%AF>
 
 $$
 Y=aX+bW+\epsilon\\

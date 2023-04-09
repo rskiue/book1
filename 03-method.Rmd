@@ -250,8 +250,8 @@ y<-1/(1+exp(0.5*d+1+0.7*u))+rnorm(10000,sd = 0.1)
 #      ↓
 # z => d => y
        
-ZDZY
-Y=Xb+u
+# ZDZY
+# Y=Xb+u
 
 dt<-tibble(u,d,z1,y)
 dt %>%

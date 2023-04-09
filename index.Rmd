@@ -11,20 +11,12 @@ description: "This is a description. Please wrote a abstract this contents. "
 
 # book_title
 
-このRm。す。
+（作成中）
 
 ## 書籍作成方法
 
-### 必要なパッケージ,環境など
+（作成中）
 
-Kください。
+## 必要なパッケージ,環境など
 
-<http://ipafont.ipa.go.jp/>
-
-また。
-
-### Download
-
-#### 種類
-
--   gitboo
+（作成中）
