@@ -8,6 +8,12 @@ library(ggdag)
 library(dagitty)
 ```
 
+## OLS
+
+末石4.2に沿って見ていく。
+
+OLSの不遍性、一致性、漸近正規性を見ていく。
+
 ## 2SLS
 
 ### Setting
