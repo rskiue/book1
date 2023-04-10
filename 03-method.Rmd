@@ -1,6 +1,7 @@
 # Methods
 
 ここではGMMについて見ていく。
+0410追加
 
 ```{r}
 library(tidyverse)
